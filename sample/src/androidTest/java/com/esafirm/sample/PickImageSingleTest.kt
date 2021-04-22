@@ -33,9 +33,11 @@ class PickImageSingleTest {
     @JvmField
     var mActivityTestRule = ActivityTestRule(MainActivity::class.java)
 
+/*
     @Rule
     @JvmField
     var mGrantPermissionRule = GrantPermissionRule.grant("android.permission.WRITE_EXTERNAL_STORAGE")
+*/
 
     @Test
     fun pickImage() {

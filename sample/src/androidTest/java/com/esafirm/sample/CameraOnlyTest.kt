@@ -29,11 +29,11 @@ class CameraOnlyTest {
     @JvmField
     var testRule = ActivityTestRule(MainActivity::class.java)
 
-    @Rule
+   /* @Rule
     @JvmField
     var grantPermissionRule = GrantPermissionRule.grant(
         "android.permission.WRITE_EXTERNAL_STORAGE"
-    )
+    )*/
 
     @Test
     fun cameraOnlyTestTwo() {

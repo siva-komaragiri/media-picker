@@ -187,12 +187,12 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
      * Check permission
      */
     private fun loadDataWithPermission() {
-        val rc = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        if (rc == PackageManager.PERMISSION_GRANTED) {
+        /*val rc = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (rc == PackageManager.PERMISSION_GRANTED) {*/
             loadData()
-        } else {
+       /* } else {
             requestWriteExternalPermission()
-        }
+        }*/
     }
 
     private fun loadData() {

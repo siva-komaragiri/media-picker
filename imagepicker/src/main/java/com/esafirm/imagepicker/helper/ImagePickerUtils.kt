@@ -25,11 +25,7 @@ object ImagePickerUtils {
         // External sdcard location
         val path = savePath.path
         val mediaStorageDir: File = if (savePath.isRelative) {
-            val parent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            } else {
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            }
+            val parent = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
             File(parent, path)
         } else {
             File(path)
@@ -67,17 +63,17 @@ object ImagePickerUtils {
 
     fun grantAppPermission(context: Context, intent: Intent?, fileUri: Uri?) {
         val resolvedIntentActivities = context.packageManager
-            .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
         for (resolvedIntentInfo in resolvedIntentActivities) {
             val packageName = resolvedIntentInfo.activityInfo.packageName
             context.grantUriPermission(packageName, fileUri,
-                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }
 
     fun revokeAppPermission(context: Context, fileUri: Uri?) {
         context.revokeUriPermission(fileUri,
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 
     fun isGifFormat(image: Image): Boolean {
