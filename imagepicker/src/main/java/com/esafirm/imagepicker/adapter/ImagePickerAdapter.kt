@@ -66,9 +66,13 @@ class ImagePickerAdapter(
         if (ImagePickerUtils.isVideoFormat(image)) {
             if (!videoDurationHolder.containsKey(image.id)) {
                 val uri = Uri.withAppendedPath(MediaStore.Files.getContentUri("external"), "" + image.id)
-                videoDurationHolder[image.id] = ImagePickerUtils.getVideoDurationLabel(
-                    context, uri
-                )
+                try {
+                    videoDurationHolder[image.id] = ImagePickerUtils.getVideoDurationLabel(
+                            context, uri
+                    )
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
             }
 
             fileTypeLabel = videoDurationHolder[image.id]
