@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.esafirm.imagepicker.R
@@ -50,8 +51,8 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(ContentObserverTrigger(
-            requireActivity().contentResolver,
-            this::loadData
+                requireActivity().contentResolver,
+                this::loadData
         ))
     }
 
@@ -60,9 +61,9 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
 
         if (::interactionListener.isInitialized.not()) {
             throw RuntimeException("ImagePickerFragment needs an " +
-                "ImagePickerInteractionListener. This will be set automatically if the " +
-                "activity implements ImagePickerInteractionListener, and can be set manually " +
-                "with fragment.setInteractionListener(listener).")
+                    "ImagePickerInteractionListener. This will be set automatically if the " +
+                    "activity implements ImagePickerInteractionListener, and can be set manually " +
+                    "with fragment.setInteractionListener(listener).")
         }
 
         val interactionListener = this.interactionListener
@@ -81,10 +82,10 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
         }
 
         val recyclerViewManager = createRecyclerViewManager(
-            recyclerView = viewBinding.recyclerView,
-            config = config,
-            passedSelectedImages = selectedImages ?: emptyList(),
-            interactionListener = interactionListener
+                recyclerView = viewBinding.recyclerView,
+                config = config,
+                passedSelectedImages = selectedImages ?: emptyList(),
+                interactionListener = interactionListener
         )
 
         if (savedInstanceState != null) {
@@ -107,14 +108,14 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
     }
 
     private fun createRecyclerViewManager(
-        recyclerView: RecyclerView,
-        config: ImagePickerConfig,
-        passedSelectedImages: List<Image>,
-        interactionListener: ImagePickerInteractionListener
+            recyclerView: RecyclerView,
+            config: ImagePickerConfig,
+            passedSelectedImages: List<Image>,
+            interactionListener: ImagePickerInteractionListener
     ) = RecyclerViewManager(
-        recyclerView,
-        config,
-        resources.configuration.orientation
+            recyclerView,
+            config,
+            resources.configuration.orientation
     ).apply {
         val selectListener = { isSelected: Boolean -> selectImage(isSelected) }
         val folderClick = { bucket: Folder -> setImageAdapter(bucket.images) }
@@ -170,7 +171,7 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
      * Get all selected images then return image to caller activity
      */
     fun onDone() {
-        presenter.onDoneSelectImages(recyclerViewManager!!.selectedImages,config)
+        presenter.onDoneSelectImages(recyclerViewManager!!.selectedImages, config)
     }
 
     /**
@@ -187,12 +188,12 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
      * Check permission
      */
     private fun loadDataWithPermission() {
-        /*val rc = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        if (rc == PackageManager.PERMISSION_GRANTED) {*/
+        val rc = ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (rc == PackageManager.PERMISSION_GRANTED) {
             loadData()
-       /* } else {
+       } else {
             requestWriteExternalPermission()
-        }*/
+        }
     }
 
     private fun loadData() {
@@ -207,8 +208,8 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
      */
     private fun requestWriteExternalPermission() {
         IpLogger.w("Write External permission is not granted. Requesting permission")
-        val permissions = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        if (ActivityCompat.shouldShowRequestPermissionRationale(activity!!, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity!!, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(permissions, RC_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE)
         } else {
             val permission = ImagePickerPreferences.PREF_WRITE_EXTERNAL_STORAGE_REQUESTED
@@ -235,8 +236,15 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
                     return
                 }
                 IpLogger.e("Permission not granted: results len = " + grantResults.size +
-                    " Result code = " + if (grantResults.isNotEmpty()) grantResults[0] else "(empty)")
+                        " Result code = " + if (grantResults.isNotEmpty()) grantResults[0] else "(empty)")
                 interactionListener.cancel()
+            }
+            RC_PERMISSION_REQUEST_CAMERA -> {
+                if (allPermissionsGranted()) {
+                    presenter.captureImage(this, config, RC_CAPTURE)
+                } else {
+                    IpLogger.w("camera permission is granted")
+                }
             }
             else -> {
                 IpLogger.d("Got unexpected permission result: $requestCode")
@@ -250,7 +258,7 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
      */
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", requireActivity().packageName, null))
+                Uri.fromParts("package", requireActivity().packageName, null))
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     }
@@ -278,7 +286,32 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
         if (!checkCameraAvailability(activity!!)) {
             return
         }
-        presenter.captureImage(this, config, RC_CAPTURE)
+        if (allPermissionsGranted()) {
+            presenter.captureImage(this, config, RC_CAPTURE)
+        } else {
+            ActivityCompat.requestPermissions(
+                    activity!!, REQUIRED_PERMISSIONS, RC_PERMISSION_REQUEST_CAMERA
+            )
+        }
+    }
+
+    fun captureVideo() {
+        if (!checkCameraAvailability(activity!!)) {
+            return
+        }
+        if (allPermissionsGranted()) {
+            presenter.captureVideo(this, config, RC_CAPTURE)
+        } else {
+            ActivityCompat.requestPermissions(
+                    activity!!, REQUIRED_PERMISSIONS, RC_PERMISSION_REQUEST_CAMERA
+            )
+        }
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+                requireContext(), it
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onDestroy() {
@@ -363,6 +396,9 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
 
         private const val RC_CAPTURE = 2000
         private const val RC_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 23
+        private const val RC_PERMISSION_REQUEST_CAMERA = 33
+
+        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
         fun newInstance(config: ImagePickerConfig): ImagePickerFragment {
             val args = Bundle().apply {

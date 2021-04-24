@@ -59,9 +59,9 @@ class MainActivity : AppCompatActivity() {
         val onlyVideo = binding.switchOnlyVideo.isChecked
         val isExclude = binding.switchIncludeExclude.isChecked
 
-        ImagePickerComponentsHolder.setInternalComponent(
+        /*ImagePickerComponentsHolder.setInternalComponent(
             CustomImagePickerComponents(this, useCustomImageLoader)
-        )
+        )*/
 
         return ImagePickerConfig {
 
@@ -75,7 +75,8 @@ class MainActivity : AppCompatActivity() {
             theme = R.style.ImagePickerTheme
 
             // set whether pick action or camera action should return immediate result or not. Only works in single mode for image picker
-            returnMode = if (returnAfterCapture) ReturnMode.ALL else ReturnMode.NONE
+            returnMode =  ReturnMode.CAMERA_ONLY
+            //returnMode = if (returnAfterCapture) ReturnMode.ALL else ReturnMode.NONE
 
             isFolderMode = folderMode // set folder mode (false by default)
             isIncludeVideo = includeVideo // include video (false by default)
