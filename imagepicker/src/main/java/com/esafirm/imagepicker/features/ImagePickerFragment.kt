@@ -295,6 +295,19 @@ class ImagePickerFragment : Fragment(), ImagePickerView {
         }
     }
 
+    fun captureVideo() {
+        if (!checkCameraAvailability(activity!!)) {
+            return
+        }
+        if (allPermissionsGranted()) {
+            presenter.captureVideo(this, config, RC_CAPTURE)
+        } else {
+            ActivityCompat.requestPermissions(
+                    activity!!, REQUIRED_PERMISSIONS, RC_PERMISSION_REQUEST_CAMERA
+            )
+        }
+    }
+
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
                 requireContext(), it

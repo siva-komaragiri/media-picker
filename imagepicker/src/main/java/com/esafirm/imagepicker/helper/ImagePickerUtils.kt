@@ -45,6 +45,30 @@ object ImagePickerUtils {
         return mediaStorageDir
     }
 
+    private fun createVideoInDirectory(savePath: ImagePickerSavePath, context: Context): File? {
+        // External sdcard location
+        val path = savePath.path
+        val mediaStorageDir: File = if (savePath.isRelative) {
+            val parent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+            } else {
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+            }
+            File(parent, path)
+        } else {
+            File(path)
+        }
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                d("Oops! Failed create $path")
+                return null
+            }
+        }
+        return mediaStorageDir
+    }
+
     fun createImageFile(savePath: ImagePickerSavePath, context: Context): File? {
         val mediaStorageDir = createFileInDirectory(savePath, context) ?: return null
 
@@ -55,6 +79,20 @@ object ImagePickerUtils {
         while (result.exists()) {
             counter++
             result = File(mediaStorageDir, "IMG_$timeStamp($counter).jpg")
+        }
+        return result
+    }
+
+    fun createVideoFile(savePath: ImagePickerSavePath, context: Context): File? {
+        val mediaStorageDir = createVideoInDirectory(savePath, context) ?: return null
+
+        // Create a media file name
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.getDefault()).format(Date())
+        var result = File(mediaStorageDir, "VID_$timeStamp.mp4")
+        var counter = 0
+        while (result.exists()) {
+            counter++
+            result = File(mediaStorageDir, "VID_$timeStamp($counter).mp4")
         }
         return result
     }
